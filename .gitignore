@@ -1,4 +1,5 @@
-ai/
-benchmarks/
-tests/
-requirements.txt
+__pycache__/
+*.pyc
+venv/
+.env
+
