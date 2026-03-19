@@ -16,10 +16,8 @@ def display_board(state):
 
     print()
     print("=" * 56)
-    print(f"    [S1={state.stores[1]:2d}]  {p1_pits}  <- Player 1")
-    print(f"             pit: 5    4    3    2    1    0")
-    print(f"             pit: 0    1    2    3    4    5")
-    print(f"    [S0={state.stores[0]:2d}]  {p0_pits}  <- Player 0")
+    print(f"  [S2={state.stores[1]:2d}]  [P12={p1_pits[5]}, P11={p1_pits[4]}, P10={p1_pits[3]}, P9={p1_pits[2]}, P8={p1_pits[1]}, P7={p1_pits[0]}]           <- Player 1")
+    print(f"           [P1={p0_pits[0]},  P2={p0_pits[1]},  P3={p0_pits[2]},  P4={p0_pits[3]}, P5={p0_pits[4]}, P6={p0_pits[5]}]  [S1={state.stores[0]:2d}]  <- Player 0")
     print("=" * 56)
 
 
