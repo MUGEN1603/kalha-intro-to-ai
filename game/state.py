@@ -16,5 +16,5 @@ def initial_state() -> KalahaState:
         #Explained: pits=(("P1", "P2", "P3", "P4", "P5", "P6"), ("P7", "P8", "P9", "P10", "P11", "P12")),
         stores=(0, 0),
         #Explained: Stores=("S1", "S2")
-        current_player=KalahaState.current_player
+        current_player=0
     )
