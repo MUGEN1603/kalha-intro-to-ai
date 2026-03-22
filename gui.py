@@ -1,8 +1,4 @@
-"""
-gui.py — Tkinter visual board for Kalaha
-Drop this file into your project root (same level as game/ and ai/).
-Run with: python gui.py
-"""
+"""Tkinter GUI for playing Kalaha against the AI. Run with: python gui.py"""
 
 import tkinter as tk
 from tkinter import font as tkfont
@@ -12,34 +8,34 @@ from game.engine import get_initial_state, player, actions, result, terminal_tes
 from game.state import KalahaState
 from ai.alpha_beta import best_move
 
-# ── Layout constants ──────────────────────────────────────────────────────────
-W, H         = 820, 380          # window size
-PIT_R        = 38                # pit circle radius
-STORE_W      = 80                # store rectangle width
-STORE_H      = 160               # store rectangle height
-PAD          = 30                # outer padding
-PIT_Y_TOP    = 100               # y-centre of player-1 pits
-PIT_Y_BOT    = 260               # y-centre of player-0 pits
-STORE_Y      = 170               # y-centre of stores
-PIT_SPACING  = 100               # horizontal gap between pit centres
+# Layout constants
+W, H         = 820, 380
+PIT_R        = 38
+STORE_W      = 80
+STORE_H      = 160
+PAD          = 30
+PIT_Y_TOP    = 100
+PIT_Y_BOT    = 260
+STORE_Y      = 170
+PIT_SPACING  = 100
 
-# ── Colours ───────────────────────────────────────────────────────────────────
+# Colour palette
 BG           = "#1e1e2e"
 PIT_FILL     = "#313244"
 PIT_HOVER    = "#45475a"
-PIT_ACTIVE   = "#89b4fa"         # blue highlight for clickable pits
+PIT_ACTIVE   = "#89b4fa"
 STORE_FILL   = "#45475a"
 TEXT_PRIMARY = "#cdd6f4"
 TEXT_DIM     = "#6c7086"
 SEED_TEXT    = "#cdd6f4"
-P0_COLOR     = "#a6e3a1"         # green — human (bottom)
-P1_COLOR     = "#f38ba8"         # red   — AI    (top)
+P0_COLOR     = "#a6e3a1"
+P1_COLOR     = "#f38ba8"
 OUTLINE      = "#585b70"
-WIN_COLOR    = "#f9e2af"         # amber for winner highlight
+WIN_COLOR    = "#f9e2af"
 
 
 def pit_x(pit_index: int) -> int:
-    """X centre of a pit given its 0-based index (left to right on board)."""
+    """Returns the x-centre of a pit on the canvas."""
     left_edge = STORE_W + PAD * 2 + 20
     return left_edge + pit_index * PIT_SPACING
 
@@ -53,65 +49,53 @@ class KalahaGUI:
 
         self.ai_depth = ai_depth
         self.state: KalahaState = get_initial_state()
-        self.ai_player = 1          # AI is always Player 1 (top)
+        self.ai_player = 1
         self.ai_thinking = False
-        self.hover_pit = None       # which pit the mouse is hovering over
+        self.hover_pit = None
 
-        # ── fonts ──
         self.font_big   = tkfont.Font(family="Helvetica", size=18, weight="bold")
         self.font_med   = tkfont.Font(family="Helvetica", size=13)
         self.font_small = tkfont.Font(family="Helvetica", size=10)
 
-        # ── canvas ──
-        self.canvas = tk.Canvas(root, width=W, height=H, bg=BG,
-                                highlightthickness=0)
+        self.canvas = tk.Canvas(root, width=W, height=H, bg=BG, highlightthickness=0)
         self.canvas.pack()
 
-        # ── status bar ──
         self.status_var = tk.StringVar(value="Your turn — click a green pit")
         status = tk.Label(root, textvariable=self.status_var,
-                          bg=BG, fg=TEXT_PRIMARY,
-                          font=self.font_med, pady=6)
+                          bg=BG, fg=TEXT_PRIMARY, font=self.font_med, pady=6)
         status.pack(fill=tk.X)
 
-        # ── restart button ──
         btn = tk.Button(root, text="New game", command=self.restart,
                         bg="#313244", fg=TEXT_PRIMARY, activebackground=PIT_HOVER,
                         activeforeground=TEXT_PRIMARY, relief=tk.FLAT,
                         font=self.font_med, padx=16, pady=4, cursor="hand2")
         btn.pack(pady=(0, 10))
 
-        # ── bindings ──
         self.canvas.bind("<Motion>",    self._on_mouse_move)
         self.canvas.bind("<Leave>",     self._on_mouse_leave)
         self.canvas.bind("<Button-1>",  self._on_click)
 
         self.draw()
 
-    # ── Drawing ───────────────────────────────────────────────────────────────
-
     def draw(self):
+        """Redraws the entire board."""
         self.canvas.delete("all")
         self._draw_stores()
         self._draw_pits()
         self._draw_labels()
 
     def _draw_stores(self):
-        # Player-0 store (left) — human
         self._draw_store(PAD, STORE_Y - STORE_H // 2,
                          self.state.stores[0], P0_COLOR)
-        # Player-1 store (right) — AI
         x1 = W - PAD - STORE_W
         self._draw_store(x1, STORE_Y - STORE_H // 2,
                          self.state.stores[1], P1_COLOR)
 
     def _draw_store(self, x, y, seeds, color):
         self.canvas.create_rectangle(x, y, x + STORE_W, y + STORE_H,
-                                     fill=STORE_FILL, outline=color,
-                                     width=2)
+                                     fill=STORE_FILL, outline=color, width=2)
         self.canvas.create_text(x + STORE_W // 2, y + STORE_H // 2,
-                                text=str(seeds),
-                                fill=color, font=self.font_big)
+                                text=str(seeds), fill=color, font=self.font_big)
 
     def _draw_pits(self):
         legal = actions(self.state) if not self.ai_thinking else []
@@ -121,7 +105,7 @@ class KalahaGUI:
         for i in range(6):
             cx = pit_x(i)
 
-            # ── Player 0 pits (bottom) ──
+            # Player 0 pits (bottom)
             seeds0 = self.state.pits[0][i]
             can_click = (i in legal) and is_human_turn
             is_hover  = (self.hover_pit == i) and can_click
@@ -141,7 +125,7 @@ class KalahaGUI:
                                         text=str(i), fill=P0_COLOR,
                                         font=self.font_small)
 
-            # ── Player 1 pits (top) — mirrored: pit 5 on the left ──
+            # Player 1 pits (top, mirrored)
             mirror = 5 - i
             seeds1 = self.state.pits[1][mirror]
             self.canvas.create_oval(cx - PIT_R, PIT_Y_TOP - PIT_R,
@@ -151,15 +135,11 @@ class KalahaGUI:
                                     fill=SEED_TEXT, font=self.font_big)
 
     def _draw_labels(self):
-        # Player labels beside the stores
         self.canvas.create_text(PAD + STORE_W // 2, STORE_Y - STORE_H // 2 - 14,
-                                text="You (P0)", fill=P0_COLOR,
-                                font=self.font_small)
+                                text="You (P0)", fill=P0_COLOR, font=self.font_small)
         self.canvas.create_text(W - PAD - STORE_W // 2,
                                 STORE_Y - STORE_H // 2 - 14,
-                                text="AI (P1)", fill=P1_COLOR,
-                                font=self.font_small)
-        # Side labels
+                                text="AI (P1)", fill=P1_COLOR, font=self.font_small)
         self.canvas.create_text(pit_x(0) - 10, PIT_Y_TOP,
                                 text="AI →", fill=TEXT_DIM,
                                 font=self.font_small, anchor=tk.E)
@@ -167,7 +147,6 @@ class KalahaGUI:
                                 text="You →", fill=TEXT_DIM,
                                 font=self.font_small, anchor=tk.E)
 
-        # Terminal: highlight winner
         if terminal_test(self.state):
             s0, s1 = self.state.stores
             if s0 > s1:
@@ -179,10 +158,8 @@ class KalahaGUI:
             self.canvas.create_text(W // 2, H // 2, text=msg,
                                     fill=col, font=self.font_big)
 
-    # ── Interaction ───────────────────────────────────────────────────────────
-
     def _pit_at(self, x, y) -> int | None:
-        """Return pit index (0-5) if (x,y) is inside a Player-0 bottom pit."""
+        """Returns pit index if click is inside a Player-0 pit circle, else None."""
         for i in range(6):
             cx = pit_x(i)
             if (x - cx) ** 2 + (y - PIT_Y_BOT) ** 2 <= PIT_R ** 2:
@@ -209,21 +186,17 @@ class KalahaGUI:
             return
         if player(self.state) == self.ai_player:
             return
-
         pit = self._pit_at(event.x, event.y)
         if pit is None or pit not in actions(self.state):
             return
-
         self._apply_move(pit)
 
     def _apply_move(self, action: int):
         self.state = result(self.state, action)
         self.draw()
-
         if terminal_test(self.state):
             self._show_result()
             return
-
         if player(self.state) == self.ai_player:
             self._ai_turn()
         else:
@@ -233,7 +206,6 @@ class KalahaGUI:
         self.ai_thinking = True
         self.status_var.set("AI is thinking…")
         self.draw()
-        # Run AI in background thread so UI doesn't freeze
         threading.Thread(target=self._run_ai, daemon=True).start()
 
     def _run_ai(self):
@@ -264,7 +236,6 @@ class KalahaGUI:
         self.draw()
 
 
-# ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     root = tk.Tk()
     app = KalahaGUI(root, ai_depth=8)
