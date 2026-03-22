@@ -1,16 +1,11 @@
+"""Command-line interface for playing Kalaha (human vs AI or AI vs AI)."""
+
 from game.engine import get_initial_state, player, actions, result, terminal_test
 from ai.alpha_beta import best_move
 
 
 def display_board(state):
-    """
-    ASCII board visualization.
-    Player 1 on top (reversed order), Player 0 on bottom.
-
-    Board Layout:
-        [S1]  [p5][p4][p3][p2][p1][p0]        <- Player 1's side
-              [p0][p1][p2][p3][p4][p5]  [S0]  <- Player 0's side
-    """
+    """Prints the board as ASCII text with pit labels."""
     p1_pits = list(reversed(state.pits[1]))
     p0_pits = list(state.pits[0])
 
@@ -22,13 +17,7 @@ def display_board(state):
 
 
 def human_vs_ai(ai_player=1, depth=8):
-    """
-    Interactive human vs AI game.
-
-    Args:
-        ai_player: Which player is the AI (0 or 1)
-        depth: AI search depth
-    """
+    """Runs an interactive game where the human plays against the AI."""
     state = get_initial_state()
     human_player = 1 - ai_player
     print("=== KALAHA: Human vs AI ===")
@@ -40,7 +29,6 @@ def human_vs_ai(ai_player=1, depth=8):
         current = player(state)
 
         if current != ai_player:
-            # Human turn
             legal = actions(state)
             pit_names = [f"P{i + 1 + current * 6}" for i in legal]
             print(f"Your turn (Player {current + 1}). Legal pits: {pit_names}")
@@ -54,7 +42,6 @@ def human_vs_ai(ai_player=1, depth=8):
                 except ValueError:
                     print(f"Please enter a number between {1 + current * 6} and {6 + current * 6}.")
         else:
-            # AI turn
             print(f"AI (Player {current + 1}) is thinking...")
             move = best_move(state, depth=depth)
             pit_name = f"P{move + 1 + current * 6}"
@@ -62,7 +49,6 @@ def human_vs_ai(ai_player=1, depth=8):
 
         state = result(state, move)
 
-    # Game over
     display_board(state)
     if state.stores[0] > state.stores[1]:
         winner = 0
@@ -76,18 +62,7 @@ def human_vs_ai(ai_player=1, depth=8):
 
 
 def run_silent_game(depth0=8, depth1=8, eval_fn0=None, eval_fn1=None):
-    """
-    AI vs AI game without output (for benchmarking).
-
-    Args:
-        depth0: Search depth for Player 0
-        depth1: Search depth for Player 1
-        eval_fn0: Evaluation function for Player 0
-        eval_fn1: Evaluation function for Player 1
-
-    Returns:
-        (winner, total_moves, final_state) where winner is 0, 1, or -1 (draw)
-    """
+    """Runs an AI vs AI game silently and returns (winner, total_moves, final_state)."""
     from ai.heuristics import eval_3
 
     eval0 = eval_fn0 or eval_3
