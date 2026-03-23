@@ -1,6 +1,5 @@
 """Alpha-Beta pruning with move ordering, transposition table, and endgame solver."""
 
-import math
 from game.engine import player, actions, result, terminal_test, utility
 from game.state import KalahaState
 from ai.heuristics import eval_3
